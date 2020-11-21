@@ -8,4 +8,4 @@ Can be enabled / disabled in the module settings by every player (might not work
 
 Screenshot: 
 
-[Foundry Combat Focus in action](Screenshot.jpg "Foundry Combat Focus in action")
+![Foundry Combat Focus in action](Screenshot.jpg "Foundry Combat Focus in action")
