@@ -1,0 +1,20 @@
+#chat {
+    order: 2; /* Place the chat below the combat tracker */
+}
+
+/* The following rules gain a bit of screen real estate by removing unnecessary paddings and shrinking the chat box */
+#sidebar {
+    height: 100vh;
+    top: 0;
+    bottom: 0;
+    right: 0;
+}
+
+#chat-form {
+    height: 42px;
+    flex-basis: 42px;
+}
+
+#chat-message {
+    min-height: 42px;
+}
