@@ -4,6 +4,7 @@
   "description": "Shows the chat window on the combat tracker tab as well - no more switching between the two tabs during combat!",
   "main": "foundry-combat-focus.js",
   "scripts": {
+    "version": "node automation/release.js && git add module.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
