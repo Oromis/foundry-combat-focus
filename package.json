@@ -1,6 +1,6 @@
 {
   "name": "foundry-combat-focus",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Shows the chat window on the combat tracker tab as well - no more switching between the two tabs during combat!",
   "main": "foundry-combat-focus.js",
   "scripts": {
