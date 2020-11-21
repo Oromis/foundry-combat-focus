@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
       - name: Zip Project
         run: |
           zip foundry-combat-focus.zip foundry-combat-focus.css foundry-combat-focus.js module.json README.md Screenshot.jpg
@@ -19,7 +22,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
@@ -33,5 +36,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./foundry-combat-focus.zip
-          asset_name: foundry-combat-focus-${{ github.ref }}.zip
+          asset_name: foundry-combat-focus-${{ steps.get_version.outputs.VERSION }}.zip
           asset_content_type: application/zip

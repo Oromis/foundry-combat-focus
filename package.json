@@ -5,6 +5,7 @@
   "main": "foundry-combat-focus.js",
   "scripts": {
     "version": "node automation/release.js && git add module.json",
+    "postversion": "git push --tags",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
