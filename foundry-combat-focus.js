@@ -70,7 +70,7 @@ Hooks.on('init', () => {
   })
 
   game.settings.register(MODULE_NAME, COMBAT_TRACKER_TO_CHAT_RATIO_SETTING, {
-    name: 'Combat Tracer to Chat ratio',
+    name: 'Combat Tracker to Chat ratio',
     hint: 'Changes the ratio by which the chat and the combat tracker are divided. Default: 1:1',
     scope: 'client',
     config: true,
