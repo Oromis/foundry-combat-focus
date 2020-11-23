@@ -10,11 +10,11 @@
     right: 0;
 }
 
-#chat-form {
+.small-chat #chat-form {
     height: 42px;
     flex-basis: 42px;
 }
 
-#chat-message {
+.small-chat #chat-message {
     min-height: 42px;
 }

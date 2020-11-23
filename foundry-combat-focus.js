@@ -1,6 +1,7 @@
 const MODULE_NAME = 'foundry-combat-focus'
 const CHAT_ON_COMBAT_TRACKER_SETTING = 'showChatOnCombatTrackerTab'
 const COMBAT_TRACKER_TO_CHAT_RATIO_SETTING = 'combatToChatRatio'
+const SMALL_CHAT_CLASS = 'small-chat'
 const CHAT_ID = 'chat'
 const COMBAT_ID = 'combat'
 const ACTIVE_CLASS = 'active'
@@ -51,10 +52,18 @@ function updateStyleElement() {
 
 function updateCombatTrackerStyle() {
   const enable = isChatOnCombatTrackerEnabled()
-  if (enable && getActiveTab() === 'combat') {
-    getChatElement().classList.add(ACTIVE_CLASS)
-  } else if (getActiveTab() !== CHAT_ID) {
-    getChatElement().classList.remove(ACTIVE_CLASS)
+  const activeTab = getActiveTab()
+  const chatElement = getChatElement()
+  if (enable && activeTab === COMBAT_ID) {
+    chatElement.classList.add(ACTIVE_CLASS)
+  } else if (activeTab !== CHAT_ID) {
+    chatElement.classList.remove(ACTIVE_CLASS)
+  }
+
+  if (enable && activeTab === COMBAT_ID) {
+    chatElement.classList.add(SMALL_CHAT_CLASS)
+  } else if (activeTab !== COMBAT_ID) {
+    chatElement.classList.remove(SMALL_CHAT_CLASS)
   }
 
   updateStyleElement()
@@ -85,7 +94,9 @@ Hooks.on('init', () => {
       '3:1': '3:1',
       '5:2': '5:2',
       '2:1': '2:1',
+      '5:3': '5:3',
       '1:1': '1:1',
+      '3:5': '3:5',
       '1:2': '1:2',
       '2:5': '2:5',
       '1:3': '1:3',
