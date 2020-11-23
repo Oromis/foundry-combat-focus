@@ -11,7 +11,11 @@ function isChatOnCombatTrackerEnabled() {
 }
 
 function getActiveTab() {
-  return ui.sidebar.activeTab
+  if (ui.sidebar != null) {
+    return ui.sidebar.activeTab
+  } else {
+    return null
+  }
 }
 
 function getChatElement() {
@@ -90,8 +94,6 @@ Hooks.on('init', () => {
     default: '1:1',
     onChange: updateCombatTrackerStyle
   })
-
-  updateCombatTrackerStyle()
 })
 
 Hooks.on('ready', () => {
@@ -101,4 +103,6 @@ Hooks.on('ready', () => {
     originalMethod.call(this, name, ...rest)
     updateCombatTrackerStyle()
   }
+
+  updateCombatTrackerStyle()
 })
