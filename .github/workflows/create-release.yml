@@ -17,7 +17,7 @@ jobs:
         run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
       - name: Zip Project
         run: |
-          zip foundry-combat-focus.zip foundry-combat-focus.css foundry-combat-focus.js module.json README.md Screenshot.jpg
+          zip -r foundry-combat-focus.zip foundry-combat-focus.css foundry-combat-focus.js module.json README.md Screenshot.jpg changelog
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
