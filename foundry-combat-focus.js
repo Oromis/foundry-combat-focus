@@ -1,16 +1,20 @@
 const MODULE_NAME = 'foundry-combat-focus'
 const CHAT_ON_COMBAT_TRACKER_SETTING = 'showChatOnCombatTrackerTab'
-const COMBAT_TRACKER_TO_CHAT_RATIO_SETTING = 'combatToChatRatio'
+const CHAT_HEIGHT_SETTING = 'chatHeight'
 const SMALL_CHAT_CLASS = 'small-chat'
 const CHAT_ID = 'chat'
 const COMBAT_ID = 'combat'
 const ACTIVE_CLASS = 'active'
 const STYLE_ID = `${MODULE_NAME}-styles`
+const DRAG_AREA_HEIGHT = 8
 
 function isChatOnCombatTrackerEnabled() {
   return game.settings.get(MODULE_NAME, CHAT_ON_COMBAT_TRACKER_SETTING)
 }
 
+/**
+ * @returns {null|string}
+ */
 function getActiveTab() {
   if (ui.sidebar != null) {
     return ui.sidebar.activeTab
@@ -23,6 +27,26 @@ function getChatElement() {
   return document.getElementById(CHAT_ID)
 }
 
+function getChatLog() {
+  return document.getElementById('chat-log')
+}
+
+function isScrolledToBottom() {
+  const chatLog = getChatLog()
+  if (chatLog != null) {
+    return chatLog.scrollHeight - chatLog.offsetHeight === chatLog.scrollTop
+  } else {
+    return false
+  }
+}
+
+function scrollChatToEnd() {
+  const chatLog = getChatLog()
+  if (chatLog != null && typeof chatLog.scrollTo === 'function') {
+    chatLog.scrollTo({ top: chatLog.scrollHeight - chatLog.offsetHeight })
+  }
+}
+
 function createStyleElement() {
   const style = document.createElement('style')
   style.setAttribute('id', STYLE_ID)
@@ -30,23 +54,22 @@ function createStyleElement() {
   return style
 }
 
-function getSizeRatio() {
-  const setting = game.settings.get(MODULE_NAME, COMBAT_TRACKER_TO_CHAT_RATIO_SETTING) || '1:1'
-  const parts = setting.split(':')
-  return {
-    combat: parseFloat(parts[0] || '1'),
-    chat: parseFloat(parts[1] || '1'),
-  }
-}
-
 function updateStyleElement() {
-  const style = document.getElementById(STYLE_ID)
-  const { combat, chat } = getSizeRatio()
-  if (style != null) {
-    style.innerText = `
-      #${CHAT_ID} { flex-grow: ${chat}; }
-      #${COMBAT_ID} { flex-grow: ${combat}; }
-    `
+  const chatHeight = game.settings.get(MODULE_NAME, CHAT_HEIGHT_SETTING)
+  if (chatHeight != null && chatHeight !== 0) {
+    const scrolledToBottom = isScrolledToBottom()
+    const style = document.getElementById(STYLE_ID)
+    if (style != null) {
+      style.innerText = `
+        #${CHAT_ID}.${SMALL_CHAT_CLASS} { 
+          flex-grow: 0;
+          flex-basis: ${chatHeight}px;
+        }
+      `
+      if (scrolledToBottom) {
+        requestAnimationFrame(() => scrollChatToEnd())
+      }
+    }
   }
 }
 
@@ -56,22 +79,16 @@ function updateCombatTrackerStyle() {
   const chatElement = getChatElement()
   if (enable && activeTab === COMBAT_ID) {
     chatElement.classList.add(ACTIVE_CLASS)
+    chatElement.classList.add(SMALL_CHAT_CLASS)
+    scrollChatToEnd()
   } else if (activeTab !== CHAT_ID) {
     chatElement.classList.remove(ACTIVE_CLASS)
-  }
-
-  if (enable && activeTab === COMBAT_ID) {
-    chatElement.classList.add(SMALL_CHAT_CLASS)
   } else if (activeTab !== COMBAT_ID) {
     chatElement.classList.remove(SMALL_CHAT_CLASS)
   }
-
-  updateStyleElement()
 }
 
-Hooks.on('init', () => {
-  createStyleElement()
-
+function registerSettings() {
   game.settings.register(MODULE_NAME, CHAT_ON_COMBAT_TRACKER_SETTING, {
     name: 'Show chat on combat tracker tab',
     hint: 'Displays the chat log below the combat tracker',
@@ -82,38 +99,67 @@ Hooks.on('init', () => {
     onChange: updateCombatTrackerStyle
   })
 
-  game.settings.register(MODULE_NAME, COMBAT_TRACKER_TO_CHAT_RATIO_SETTING, {
-    name: 'Combat Tracker to Chat ratio',
-    hint: 'Changes the ratio by which the chat and the combat tracker are divided. Default: 1:1',
+  game.settings.register(MODULE_NAME, CHAT_HEIGHT_SETTING, {
+    name: 'Chat height',
+    hint: 'Changes the chat window height when displaying it below the combat tracker',
     scope: 'client',
-    config: true,
-    type: String,
-    choices: {
-      '1:0': '1:0',
-      '4:1': '4:1',
-      '3:1': '3:1',
-      '5:2': '5:2',
-      '2:1': '2:1',
-      '5:3': '5:3',
-      '1:1': '1:1',
-      '3:5': '3:5',
-      '1:2': '1:2',
-      '2:5': '2:5',
-      '1:3': '1:3',
-      '1:4': '1:4',
-    },
-    default: '1:1',
-    onChange: updateCombatTrackerStyle
+    config: false,  //< Non-UI setting. Adjusted via drag and drop.
+    type: Number,
+    default: null,
   })
-})
+}
 
-Hooks.on('ready', () => {
+function injectSidebarHook() {
   const sidebar = ui.sidebar._tabs[0]
   const originalMethod = sidebar.activate
   sidebar.activate = function activateOverride(name, ...rest) {
     originalMethod.call(this, name, ...rest)
     updateCombatTrackerStyle()
   }
+}
 
+function isInDragArea(event) {
+  return event.offsetY < DRAG_AREA_HEIGHT
+}
+
+let resizing = false
+
+function onStartDrag(event) {
+  if (isInDragArea(event)) {
+    resizing = true
+  }
+}
+
+function onDrag(event) {
+  if (resizing) {
+    const chatElement = getChatElement()
+    game.settings.set(MODULE_NAME, CHAT_HEIGHT_SETTING, chatElement.offsetHeight - event.movementY)
+    updateStyleElement()
+  }
+}
+
+function onStopDrag() {
+  if (resizing) {
+    resizing = false
+  }
+}
+
+function registerDragResizeListener() {
+  const chatElement = getChatElement()
+  chatElement.addEventListener('pointerdown', onStartDrag)
+  document.addEventListener('pointermove', onDrag)
+  document.addEventListener('pointerup', onStopDrag)
+  document.addEventListener('pointercancel', onStopDrag)
+}
+
+Hooks.on('init', () => {
+  createStyleElement()
+  registerSettings()
+})
+
+Hooks.on('ready', () => {
+  injectSidebarHook()
+  registerDragResizeListener()
   updateCombatTrackerStyle()
+  updateStyleElement()
 })

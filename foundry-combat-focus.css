@@ -18,3 +18,26 @@
 .small-chat #chat-message {
     min-height: 42px;
 }
+
+.small-chat {
+    position: relative;
+    min-height: 8px;
+}
+
+.small-chat::before {
+    content: '';
+    height: 8px;
+    cursor: row-resize;
+}
+
+.small-chat::after {
+    content: '';
+    height: 2px;
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    right: 4px;
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+    cursor: row-resize;
+}
