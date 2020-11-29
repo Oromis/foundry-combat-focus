@@ -15,3 +15,7 @@ Screenshots:
 ![Foundry Combat Focus in action](Screenshot.jpg "Foundry Combat Focus in action")
 
 ![Combat Focus provides its own entries in the settings menu](changelog/combat-tracker-to-chat-ratio-setting.jpg "Combat Tracker to Chat ratio setting")
+
+If you want to show your support for my work financially, feel free to donate via PayPal - it's greatly appreciated! 
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=UV4QZJ8SW4JAN&source=url)
