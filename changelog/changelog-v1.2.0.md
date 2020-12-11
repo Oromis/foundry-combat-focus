@@ -1,4 +1,4 @@
-# Foundry Combat Focus update v1.1.3
+# Foundry Combat Focus update v1.2.0
 
 Release date: 2020-11-24
 
