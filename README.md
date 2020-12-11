@@ -14,7 +14,7 @@ Screenshots:
 
 ![Foundry Combat Focus in action](Screenshot.jpg "Foundry Combat Focus in action")
 
-![Combat Focus provides its own entries in the settings menu](changelog/combat-tracker-to-chat-ratio-setting.jpg "Combat Tracker to Chat ratio setting")
+![Combat Focus Settings](screenshots/Settings.jpg "Combat Tracker to Chat ratio setting")
 
 If you want to show your support for my work financially, feel free to donate via PayPal - it's greatly appreciated! 
 
