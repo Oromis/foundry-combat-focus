@@ -46,6 +46,7 @@
     cursor: row-resize;
 }
 
-.small-chat.hide-chat-input #chat-log ~ * {
+.small-chat.hide-chat-input #chat-log ~ *,
+body.emu.e-body#emu #sidebar #chat.small-chat.hide-chat-input #chat-log ~ * { /* Ernie's Modern UI compatibility */
     display: none;
 }

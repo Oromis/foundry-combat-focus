@@ -67,8 +67,10 @@ function updateStyleElement() {
     const style = document.getElementById(STYLE_ID)
     if (style != null) {
       style.innerText = `
-        #${CHAT_ID}.${SMALL_CHAT_CLASS} { 
+        #${CHAT_ID}.${SMALL_CHAT_CLASS},
+        body.emu.e-body#emu #sidebar #${CHAT_ID}.sidebar-tab.${SMALL_CHAT_CLASS} { // Ernie's Modern UI compatibility
           flex-grow: 0;
+          flex-shrink: 0;
           flex-basis: ${chatHeight}px;
         }
       `
@@ -155,7 +157,8 @@ function onStartDrag(event) {
 function onDrag(event) {
   if (resizing) {
     const chatElement = getChatElement()
-    game.settings.set(MODULE_NAME, CHAT_HEIGHT_SETTING, chatElement.offsetHeight - event.movementY)
+    const newHeight = chatElement.offsetHeight - event.movementY
+    game.settings.set(MODULE_NAME, CHAT_HEIGHT_SETTING, newHeight)
     updateStyleElement()
   }
 }
