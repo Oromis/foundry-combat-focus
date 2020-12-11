@@ -8,7 +8,7 @@ Features:
 
 - Shows the chat window on the combat tracker tab (below the turn order)
 - Can be enabled / disabled in the module settings by every player (might not work great on small screens).
-- The ratio of the divide between the combat tracker and the chat can be adjusted in the settings be each player individually
+- The height ratio between the combat tracker and the chat can be adjusted by dragging a handle between the two by each player individually
 
 Screenshots: 
 
