@@ -1,7 +1,9 @@
 const MODULE_NAME = 'foundry-combat-focus'
 const CHAT_ON_COMBAT_TRACKER_SETTING = 'showChatOnCombatTrackerTab'
+const CHAT_INPUT_IN_SPLIT_VIEW = 'showChatInputInSplitView'
 const CHAT_HEIGHT_SETTING = 'chatHeight'
 const SMALL_CHAT_CLASS = 'small-chat'
+const HIDE_CHAT_INPUT_CLASS = 'hide-chat-input'
 const CHAT_ID = 'chat'
 const COMBAT_ID = 'combat'
 const ACTIVE_CLASS = 'active'
@@ -10,6 +12,10 @@ const DRAG_AREA_HEIGHT = 8
 
 function isChatOnCombatTrackerEnabled() {
   return game.settings.get(MODULE_NAME, CHAT_ON_COMBAT_TRACKER_SETTING)
+}
+
+function isChatInputOnCombatTrackerEnabled() {
+  return game.settings.get(MODULE_NAME, CHAT_INPUT_IN_SPLIT_VIEW)
 }
 
 /**
@@ -78,13 +84,18 @@ function updateCombatTrackerStyle() {
   const activeTab = getActiveTab()
   const chatElement = getChatElement()
   if (enable && activeTab === COMBAT_ID) {
-    chatElement.classList.add(ACTIVE_CLASS)
-    chatElement.classList.add(SMALL_CHAT_CLASS)
+    chatElement.classList.add(ACTIVE_CLASS, SMALL_CHAT_CLASS)
     scrollChatToEnd()
   } else if (activeTab !== CHAT_ID) {
     chatElement.classList.remove(ACTIVE_CLASS)
   } else if (activeTab !== COMBAT_ID) {
     chatElement.classList.remove(SMALL_CHAT_CLASS)
+  }
+
+  if (!isChatInputOnCombatTrackerEnabled() && activeTab === COMBAT_ID) {
+    chatElement.classList.add(HIDE_CHAT_INPUT_CLASS)
+  } else {
+    chatElement.classList.remove(HIDE_CHAT_INPUT_CLASS)
   }
 }
 
@@ -92,6 +103,17 @@ function registerSettings() {
   game.settings.register(MODULE_NAME, CHAT_ON_COMBAT_TRACKER_SETTING, {
     name: 'Show chat on combat tracker tab',
     hint: 'Displays the chat log below the combat tracker',
+    scope: 'client',
+    config: true,
+    type: Boolean,
+    default: true,
+    onChange: updateCombatTrackerStyle
+  })
+
+  game.settings.register(MODULE_NAME, CHAT_INPUT_IN_SPLIT_VIEW, {
+    name: 'Show chat input on combat tracker tab',
+    hint: 'Displays the chat input box below the chat log (as normal) on the combat tracker tab. Only takes effect ' +
+      'when the above option is enabled.',
     scope: 'client',
     config: true,
     type: Boolean,
