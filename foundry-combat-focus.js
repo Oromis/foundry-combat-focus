@@ -68,7 +68,7 @@ function updateStyleElement() {
     if (style != null) {
       style.innerText = `
         #${CHAT_ID}.${SMALL_CHAT_CLASS},
-        body.emu.e-body#emu #sidebar #${CHAT_ID}.sidebar-tab.${SMALL_CHAT_CLASS} { // Ernie's Modern UI compatibility
+        body.emu.e-body#emu #sidebar #${CHAT_ID}.sidebar-tab.${SMALL_CHAT_CLASS} { /* Ernie's Modern UI compatibility */
           flex-grow: 0;
           flex-shrink: 0;
           flex-basis: ${chatHeight}px;
