@@ -142,14 +142,14 @@ function injectSidebarHook() {
   }
 }
 
-function isInDragArea(event) {
-  return event.offsetY < DRAG_AREA_HEIGHT
+function isInDragArea(chatElement, event) {
+  return event.target === chatElement && event.offsetY < DRAG_AREA_HEIGHT
 }
 
 let resizing = false
 
-function onStartDrag(event) {
-  if (isInDragArea(event)) {
+function onStartDrag(chatElement, event) {
+  if (isInDragArea(chatElement, event)) {
     resizing = true
   }
 }
@@ -171,7 +171,7 @@ function onStopDrag() {
 
 function registerDragResizeListener() {
   const chatElement = getChatElement()
-  chatElement.addEventListener('pointerdown', onStartDrag)
+  chatElement.addEventListener('pointerdown', onStartDrag.bind(this, chatElement))
   document.addEventListener('pointermove', onDrag)
   document.addEventListener('pointerup', onStopDrag)
   document.addEventListener('pointercancel', onStopDrag)
