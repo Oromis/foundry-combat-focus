@@ -19,7 +19,7 @@
     "foundry-combat-focus.css"
   ],
   "manifest": "https://raw.githubusercontent.com/Oromis/foundry-combat-focus/main/module.json",
-  "download": "https://github.com/Oromis/foundry-combat-focus/releases/download/v1.4.1/foundry-combat-focus-v1.4.1.zip",
+  "download": "https://github.com/Oromis/foundry-combat-focus/releases/download/v1.4.2/foundry-combat-focus-v1.4.2.zip",
   "id": "foundry-combat-focus",
   "compatibility": {
     "minimum": "0.5.0",
