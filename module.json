@@ -11,7 +11,7 @@
   "license": "https://www.gnu.org/licenses/gpl-3.0.en.html",
   "readme": "README.md",
   "bugs": "https://github.com/Oromis/foundry-combat-focus/issues",
-  "version": "1.4.2",
+  "version": "2.0.0",
   "esmodules": [
     "foundry-combat-focus.js"
   ],
@@ -19,7 +19,7 @@
     "foundry-combat-focus.css"
   ],
   "manifest": "https://raw.githubusercontent.com/Oromis/foundry-combat-focus/main/module.json",
-  "download": "https://github.com/Oromis/foundry-combat-focus/releases/download/v1.4.2/foundry-combat-focus-v1.4.2.zip",
+  "download": "https://github.com/Oromis/foundry-combat-focus/releases/download/v2.0.0/foundry-combat-focus-v2.0.0.zip",
   "id": "foundry-combat-focus",
   "compatibility": {
     "minimum": "14",
