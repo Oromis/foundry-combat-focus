@@ -1,52 +1,93 @@
-#chat {
-    order: 2; /* Place the chat below the combat tracker */
+/* Only the expanded combat split is affected. Native chat and popouts keep their styles. */
+#sidebar-content.expanded.active-combat.combat-focus-split > #combat {
+    order: 0;
+    flex: 1 1 0;
+    min-height: min(180px, 40%);
+    overflow: hidden;
 }
 
-#combat {
-    min-height: 180px;
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat {
+    display: flex;
+    order: 1;
+    flex: 0 0 clamp(min(160px, 40%), var(--combat-focus-chat-height, 50%), calc(100% - min(180px, 40%)));
+    min-height: 0;
+    padding-top: 0;
+    row-gap: 0;
 }
 
-/* The following rules gain a bit of screen real estate by removing unnecessary paddings and shrinking the chat box */
-#sidebar {
-    height: 100vh;
-    top: 0;
-    bottom: 0;
-    right: 0;
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat .chat-scroll {
+    min-height: 0;
 }
 
-.small-chat #chat-form {
-    height: 42px;
-    flex-basis: 42px;
+/* Keep core's editor and commands, with room for one visible line of text. */
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat .chat-form {
+    margin-top: 0;
+    row-gap: 0;
+    background: var(--control-bg-color, var(--color-cool-5-75));
+    background-clip: content-box;
 }
 
-.small-chat #chat-message {
-    min-height: 42px;
+/* Dice Tray offsets itself for core's form gap; keep its native rows flush here. */
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat .chat-form > .dice-tray {
+    margin-block: 0;
 }
 
-.small-chat {
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat .chat-form :is(
+    #chat-controls .ui-control,
+    .dice-tray > .dice-tray__buttons > button,
+    .dice-tray > .dice-tray__buttons > input
+) {
+    border-radius: 0;
+}
+
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat #chat-message {
+    flex: 0 0 2rem;
+    min-height: 2rem;
+    gap: 0;
+}
+
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat #chat-message > .menu-container {
+    display: none;
+}
+
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat #chat-message .editor-content {
+    padding-block: 4px;
+    line-height: 1.25;
+}
+
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat #chat-message .editor-content > p {
+    margin-block: 0;
+}
+
+.combat-focus-resize {
+    display: none;
+}
+
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat > .combat-focus-resize {
+    display: block;
     position: relative;
-    min-height: 100px;
-}
-
-.small-chat::before {
-    content: '';
-    height: 8px;
+    flex: 0 0 10px;
+    width: var(--sidebar-width);
     cursor: row-resize;
+    touch-action: none;
+    user-select: none;
+    color: var(--color-text-accent, var(--color-warm-1, #ee9b3a));
 }
 
-.small-chat::after {
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat > .combat-focus-resize::before {
     content: '';
-    height: 2px;
     position: absolute;
-    top: 2px;
-    left: 4px;
-    right: 4px;
-    border-top: 1px solid #666;
-    border-bottom: 1px solid #666;
-    cursor: row-resize;
+    inset-inline: 4px;
+    top: calc(50% - 1px);
+    height: 2px;
+    background: currentColor;
 }
 
-.small-chat.hide-chat-input #chat-log ~ *,
-body.emu.e-body#emu #sidebar #chat.small-chat.hide-chat-input #chat-log ~ * { /* Ernie's Modern UI compatibility */
-    display: none !important;
+#sidebar-content.expanded.active-combat.combat-focus-split > #chat > .combat-focus-resize:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+}
+
+#sidebar-content.expanded.active-combat.combat-focus-hide-input > #chat .chat-form > :not(.jump-to-bottom) {
+    display: none;
 }

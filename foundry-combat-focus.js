@@ -1,210 +1,213 @@
 const MODULE_NAME = 'foundry-combat-focus'
-const DISPLAY_NAME = 'Combat Focus'
-const CHAT_ON_COMBAT_TRACKER_SETTING = 'showChatOnCombatTrackerTab'
-const CHAT_INPUT_IN_SPLIT_VIEW = 'showChatInputInSplitView'
-const CHAT_HEIGHT_SETTING = 'chatHeight'
-const SMALL_CHAT_CLASS = 'small-chat'
-const HIDE_CHAT_INPUT_CLASS = 'hide-chat-input'
-const CHAT_ID = 'chat'
-const COMBAT_ID = 'combat'
-const ACTIVE_CLASS = 'active'
-const STYLE_ID = `${MODULE_NAME}-styles`
-const DRAG_AREA_HEIGHT = 8
+const SHOW_CHAT = 'showChatOnCombatTrackerTab'
+const SHOW_INPUT = 'showChatInputInSplitView'
+const CHAT_HEIGHT = 'chatHeight'
+const SPLIT_CLASS = 'combat-focus-split'
+const HIDE_INPUT_CLASS = 'combat-focus-hide-input'
+const HEIGHT_PROPERTY = '--combat-focus-chat-height'
+const HANDLE_CLASS = 'combat-focus-resize'
 
-function isChatOnCombatTrackerEnabled() {
-  return game.settings.get(MODULE_NAME, CHAT_ON_COMBAT_TRACKER_SETTING)
+function getContent() {
+  return document.getElementById('sidebar-content')
 }
 
-function isChatInputOnCombatTrackerEnabled() {
-  return game.settings.get(MODULE_NAME, CHAT_INPUT_IN_SPLIT_VIEW)
+/** Only the docked native applications participate; popouts keep core behavior. */
+function isSplitVisible() {
+  const content = getContent()
+  return Boolean(
+    content &&
+    game.settings.get(MODULE_NAME, SHOW_CHAT) &&
+    !ui.chat?.options.stream &&
+    ui.sidebar?.tabGroups.primary === 'combat' &&
+    ui.sidebar.expanded &&
+    !ui.chat?.popout?.rendered &&
+    ui.chat?.element?.parentElement === content &&
+    ui.combat?.element?.parentElement === content
+  )
+}
+
+function applyHeight() {
+  const content = getContent()
+  if (!content) return
+  const height = game.settings.get(MODULE_NAME, CHAT_HEIGHT)
+  if (Number.isFinite(height) && height > 0) {
+    content.style.setProperty(HEIGHT_PROPERTY, `${height}px`)
+  } else {
+    content.style.removeProperty(HEIGHT_PROPERTY)
+  }
+}
+
+function scrollBottomIfNeeded(wasAtBottom) {
+  if (wasAtBottom) requestAnimationFrame(() => ui.chat.scrollBottom())
+}
+
+function updateLayout() {
+  const content = getContent()
+  if (!content || !ui.chat?.rendered) return
+  const wasAtBottom = ui.chat.isAtBottom
+  const wasSplit = content.classList.contains(SPLIT_CLASS)
+  const split = isSplitVisible()
+  content.classList.toggle(SPLIT_CLASS, split)
+  content.classList.toggle(HIDE_INPUT_CLASS,
+    split && !game.settings.get(MODULE_NAME, SHOW_INPUT))
+  applyHeight()
+  installResizeHandle()
+
+  // This core method moves the existing editor/controls and updates the hotbar.
+  // The subclass below changes only the visibility decision it consults.
+  if (split !== wasSplit) ui.chat._toggleNotifications()
+  if (split !== wasSplit) scrollBottomIfNeeded(wasAtBottom)
+}
+
+let scheduled = false
+function scheduleLayout() {
+  if (scheduled) return
+  scheduled = true
+  requestAnimationFrame(() => {
+    scheduled = false
+    updateLayout()
+  })
+}
+
+function registerSettings() {
+  game.settings.register(MODULE_NAME, SHOW_CHAT, {
+    name: 'Show chat on combat tracker tab',
+    hint: 'Displays the native chat log below the combat tracker.',
+    scope: 'client', config: true, type: Boolean, default: true,
+    onChange: scheduleLayout
+  })
+  game.settings.register(MODULE_NAME, SHOW_INPUT, {
+    name: 'Show chat input on combat tracker tab',
+    hint: 'Displays the native chat input below the chat log in split view.',
+    scope: 'client', config: true, type: Boolean, default: true,
+    onChange: scheduleLayout
+  })
+  game.settings.register(MODULE_NAME, CHAT_HEIGHT, {
+    name: 'Chat height',
+    hint: 'Adjust by dragging the divider above the chat, or using its arrow keys.',
+    scope: 'client', config: false, type: Number, default: null,
+    onChange: () => {
+      const wasAtBottom = ui.chat?.isAtBottom
+      applyHeight()
+      scrollBottomIfNeeded(wasAtBottom)
+    }
+  })
 }
 
 /**
- * @returns {null|string}
+ * Use the configured core/system ChatLog class, including its templates, message
+ * rendering, event handlers, editor, history and popout implementation.
+ * v14's protected policy is the sole behavior extension. Returning false lets
+ * core dock its own input and controls and suppress duplicate notifications.
  */
-function getActiveTab() {
-  if (ui.sidebar != null) {
-    return ui.sidebar.activeTab
-  } else {
-    return null
-  }
-}
-
-function getChatElement() {
-  return document.getElementById(CHAT_ID)
-}
-
-function getChatLog() {
-  return document.getElementById('chat-log')
-}
-
-function isScrolledToBottom() {
-  const chatLog = getChatLog()
-  if (chatLog != null) {
-    return chatLog.scrollHeight - chatLog.offsetHeight === chatLog.scrollTop
-  } else {
-    return false
-  }
-}
-
-function scrollChatToEnd() {
-  const chatLog = getChatLog()
-  if (chatLog != null && typeof chatLog.scrollTo === 'function') {
-    chatLog.scrollTo({ top: chatLog.scrollHeight - chatLog.offsetHeight })
-  }
-}
-
-function createStyleElement() {
-  const style = document.createElement('style')
-  style.setAttribute('id', STYLE_ID)
-  document.head.append(style)
-  return style
-}
-
-function updateStyleElement() {
-  const chatHeight = game.settings.get(MODULE_NAME, CHAT_HEIGHT_SETTING)
-  if (chatHeight != null && chatHeight !== 0) {
-    const scrolledToBottom = isScrolledToBottom()
-    const style = document.getElementById(STYLE_ID)
-    if (style != null) {
-      style.innerText = `
-        #${CHAT_ID}.${SMALL_CHAT_CLASS} {
-          flex-grow: 0 !important;
-          flex-shrink: 0 !important;
-          flex-basis: ${chatHeight}px !important;
-        }
-      `
-      if (scrolledToBottom) {
-        requestAnimationFrame(() => scrollChatToEnd())
-      }
+function configureChat() {
+  const BaseChatLog = CONFIG.ui.chat
+  CONFIG.ui.chat = class CombatFocusChatLog extends BaseChatLog {
+    _shouldShowNotifications(options = {}) {
+      if (isSplitVisible()) return false
+      return super._shouldShowNotifications(options)
     }
   }
 }
 
-function updateCombatTrackerStyle() {
-  const enable = isChatOnCombatTrackerEnabled()
-  const activeTab = getActiveTab()
-  const chatElement = getChatElement()
-  if (enable && activeTab === COMBAT_ID) {
-    chatElement.classList.add(ACTIVE_CLASS, SMALL_CHAT_CLASS)
-    scrollChatToEnd()
-  } else if (activeTab !== CHAT_ID) {
-    chatElement.classList.remove(ACTIVE_CLASS)
-  } else if (activeTab !== COMBAT_ID) {
-    chatElement.classList.remove(SMALL_CHAT_CLASS)
-  }
-
-  if (!isChatInputOnCombatTrackerEnabled() && activeTab === COMBAT_ID) {
-    chatElement.classList.add(HIDE_CHAT_INPUT_CLASS)
-  } else {
-    chatElement.classList.remove(HIDE_CHAT_INPUT_CLASS)
-  }
+function setHeight(height) {
+  const content = getContent()
+  const available = content.clientHeight
+  // Bound both panes, including after shrinking the browser or changing UI scale.
+  const minimum = Math.min(160, available * 0.4)
+  const maximum = available - Math.min(180, available * 0.4)
+  const clamped = Math.round(Math.max(minimum, Math.min(height, maximum)))
+  content.style.setProperty(HEIGHT_PROPERTY, `${clamped}px`)
+  return clamped
 }
 
-function registerSettings() {
-  game.settings.register(MODULE_NAME, CHAT_ON_COMBAT_TRACKER_SETTING, {
-    name: 'Show chat on combat tracker tab',
-    hint: 'Displays the chat log below the combat tracker',
-    scope: 'client',
-    config: true,
-    type: Boolean,
-    default: true,
-    onChange: updateCombatTrackerStyle
-  })
-
-  game.settings.register(MODULE_NAME, CHAT_INPUT_IN_SPLIT_VIEW, {
-    name: 'Show chat input on combat tracker tab',
-    hint: 'Displays the chat input box below the chat log (as normal) on the combat tracker tab. Only takes effect ' +
-      'when the above option is enabled.',
-    scope: 'client',
-    config: true,
-    type: Boolean,
-    default: true,
-    onChange: updateCombatTrackerStyle
-  })
-
-  game.settings.register(MODULE_NAME, CHAT_HEIGHT_SETTING, {
-    name: 'Chat height',
-    hint: 'Changes the chat window height when displaying it below the combat tracker',
-    scope: 'client',
-    config: false,  //< Non-UI setting. Adjusted via drag and drop.
-    type: Number,
-    default: null,
+function persistHeight(height) {
+  game.settings.set(MODULE_NAME, CHAT_HEIGHT, height).catch(error => {
+    console.error('Combat Focus | Could not save chat height', error)
   })
 }
 
-function injectSidebarHook() {
-  const sidebar = ui.sidebar._tabs[0]
-  const originalMethod = sidebar.activate
-  sidebar.activate = function activateOverride(name, ...rest) {
-    originalMethod.call(this, name, ...rest)
-    updateCombatTrackerStyle()
+let resizeObserver
+function installResizeHandle() {
+  const chat = ui.chat.element
+  if (!chat || chat.querySelector(`:scope > .${HANDLE_CLASS}`)) return
+  const handle = document.createElement('div')
+  handle.className = HANDLE_CLASS
+  handle.tabIndex = 0
+  handle.setAttribute('role', 'separator')
+  handle.setAttribute('aria-label', 'Resize combat tracker and chat')
+  handle.setAttribute('aria-orientation', 'horizontal')
+  handle.setAttribute('aria-controls', 'combat chat')
+  handle.setAttribute('aria-valuemin', '0')
+  handle.setAttribute('aria-valuemax', '100')
+  handle.setAttribute('aria-valuenow', '50')
+  handle.title = 'Drag to resize chat. Arrow keys resize; Home resets.'
+  chat.prepend(handle)
+  resizeObserver?.disconnect()
+  resizeObserver = new ResizeObserver(() => {
+    if (!isSplitVisible()) return
+    const percent = Math.round(chat.offsetHeight / getContent().clientHeight * 100)
+    handle.setAttribute('aria-valuenow', `${percent}`)
+    handle.setAttribute('aria-valuetext', `${percent}% chat`)
+  })
+  resizeObserver.observe(chat)
+
+  let drag = null
+  handle.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || !isSplitVisible()) return
+    event.preventDefault()
+    const content = getContent()
+    // Pointer coordinates are viewport pixels; layout dimensions follow UI scale.
+    const scale = content.getBoundingClientRect().height / content.clientHeight
+    drag = {id: event.pointerId, y: event.clientY, height: chat.offsetHeight, scale,
+      wasAtBottom: ui.chat.isAtBottom}
+    handle.setPointerCapture(event.pointerId)
+  })
+  handle.addEventListener('pointermove', event => {
+    if (!drag || event.pointerId !== drag.id) return
+    if (!isSplitVisible()) return cancelDrag()
+    setHeight(drag.height - (event.clientY - drag.y) / drag.scale)
+    scrollBottomIfNeeded(drag.wasAtBottom)
+  })
+  function cancelDrag() {
+    if (!drag) return
+    const {id} = drag
+    drag = null
+    applyHeight()
+    if (handle.hasPointerCapture(id)) handle.releasePointerCapture(id)
   }
+  handle.addEventListener('pointerup', event => {
+    if (!drag || event.pointerId !== drag.id) return
+    const height = chat.offsetHeight
+    drag = null
+    handle.releasePointerCapture(event.pointerId)
+    persistHeight(height)
+  })
+  handle.addEventListener('pointercancel', cancelDrag)
+  handle.addEventListener('lostpointercapture', cancelDrag)
+  handle.addEventListener('keydown', event => {
+    if (!isSplitVisible()) return
+    if (event.key === 'Home') {
+      event.preventDefault()
+      persistHeight(null)
+    } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault()
+      const wasAtBottom = ui.chat.isAtBottom
+      const step = event.shiftKey ? 50 : 10
+      persistHeight(setHeight(chat.offsetHeight + (event.key === 'ArrowUp' ? step : -step)))
+      scrollBottomIfNeeded(wasAtBottom)
+    }
+  })
 }
 
-function isInDragArea(chatElement, event) {
-  return event.target === chatElement && event.offsetY < DRAG_AREA_HEIGHT
-}
-
-let resizing = false
-
-function onStartDrag(chatElement, event) {
-  if (isInDragArea(chatElement, event)) {
-    resizing = true
-  }
-}
-
-function onDrag(event) {
-  if (resizing) {
-    const chatElement = getChatElement()
-    const newHeight = chatElement.offsetHeight - event.movementY
-    game.settings.set(MODULE_NAME, CHAT_HEIGHT_SETTING, newHeight)
-    updateStyleElement()
-  }
-}
-
-function onStopDrag() {
-  if (resizing) {
-    resizing = false
-  }
-}
-
-let dragStartRegistered = false
-
-function registerDragStartListener() {
-  if (dragStartRegistered) {
-    return
-  }
-
-  const chatElement = getChatElement()
-  if (chatElement.tagName !== 'TEMPLATE') {
-    chatElement.addEventListener('pointerdown', onStartDrag.bind(this, chatElement))
-    dragStartRegistered = true
-    console.log(`[${DISPLAY_NAME}] Drag start listener registered`)
-  } else {
-    console.debug(`[${DISPLAY_NAME}] Skipping to register chat drag handler because the chat isn't rendered yet.`)
-  }
-}
-
-function registerDragResizeListener() {
-  registerDragStartListener()
-  document.addEventListener('pointermove', onDrag)
-  document.addEventListener('pointerup', onStopDrag)
-  document.addEventListener('pointercancel', onStopDrag)
-}
-
-Hooks.on('init', () => {
-  createStyleElement()
+Hooks.once('init', () => {
   registerSettings()
+  configureChat()
 })
 
-Hooks.on('ready', () => {
-  injectSidebarHook()
-  registerDragResizeListener()
-  updateCombatTrackerStyle()
-  updateStyleElement()
-})
-
-Hooks.on('renderSidebarTab', function() {
-  registerDragStartListener()
-})
+// These hooks cover tab switches, collapse/expand, rerenders and popout lifecycle.
+// Defer until core has completed its class/DOM changes for the current event.
+for (const hook of ['ready', 'changeSidebarTab', 'collapseSidebar',
+  'renderSidebar', 'renderChatLog', 'renderCombatTracker', 'closeChatLog']) {
+  Hooks.on(hook, scheduleLayout)
+}
